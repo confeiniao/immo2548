@@ -26,7 +26,7 @@ jobs:
       run: |
         git clone https://github.com/hanwckf/immortalwrt-mt798x.git immortalwrt
         cd immortalwrt
-        git checkout main
+        git checkout openwrt-21.02
 
     - name: Configure for CT3003
       run: |
