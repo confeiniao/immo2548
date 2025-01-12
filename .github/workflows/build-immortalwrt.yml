@@ -1,17 +1,17 @@
 name: Build ImmortalWrt for CT3003
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
   pull_request:
     branches:
       - main
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   build:
-    runs-on: ubuntu-20.04  # 明确使用 Ubuntu 20.04
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Checkout repository
@@ -24,21 +24,21 @@ jobs:
 
     - name: Clone ImmortalWrt source
       run: |
-        git clone https://github.com/hanwckf/immortalwrt-mt798x.git immortalwrt
+        git clone --depth=1 https://github.com/hanwckf/immortalwrt-mt798x.git immortalwrt
         cd immortalwrt
-        git checkout openwrt-21.02
+
+    - name: Update and install feeds
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
 
     - name: Configure for CT3003
       run: |
-        cd immortalwrt
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
-        cp -f defconfig/mt7981-ax3000.config .config
+        cp -f defconfig/mt7981-ax3000.config .config  # 根据设备选择配置文件
         make defconfig
 
     - name: Build ImmortalWrt
       run: |
-        cd immortalwrt
         make -j$(nproc)
 
     - name: Upload artifacts
