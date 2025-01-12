@@ -1,6 +1,7 @@
 name: Build ImmortalWrt for CT3003
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
