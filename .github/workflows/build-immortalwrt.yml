@@ -42,11 +42,11 @@ jobs:
     - name: Configure for CT3003
       run: |
         # 下载配置文件
-        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/mt7981-ax3000.config -O mt7981-ax3000.config
-        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/files.zip -O files.zip
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/mt7981-ax3000.config -O mt7981-ax3000.config
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/files.zip -O files.zip
 
         # 下载 luci-app-adguardhome.ipk
-        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/luci-app-adguardhome_1.8-9_all.ipk -O luci-app-adguardhome_1.8-9_all.gz
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/luci-app-adguardhome_1.8-9_all.ipk -O luci-app-adguardhome_1.8-9_all.gz
 
         # 解压 files.zip
         unzip files.zip -d files
@@ -76,6 +76,8 @@ jobs:
         chmod 0755 files/etc/rc.d
         chmod 0777 files/etc/rc.d/S99heyi
         chmod 0777 files/etc/rc.d/S99wipv6
+        chmod 0777 files/etc/rc.d/K01AdGuardHome
+        chmod 0777 files/etc/rc.d/S95AdGuardHome
         chmod 0755 files/etc/zs
         chmod 0644 files/etc/zs/cert_id.txt
         chmod 0644 files/etc/zs/uhttpd.crt
