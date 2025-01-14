@@ -36,8 +36,8 @@ jobs:
 
     - name: Download config and files
       run: |
-        wget https://d.acyun.us.kg:833/mt7981-ax3000.config -O mt7981-ax3000.config
-        wget https://d.acyun.us.kg:833/files.7z -O files.7z
+        wget https://raw.codehub.cn/p/aachabcces/d/aachabccintt/git/raw/master/st/mt7981-ax3000.config?token=pcBmmCflfsNYEEiikBRJYk8axHYWzJIBErnFQZo1LQ -O mt7981-ax3000.config
+        wget https://raw.codehub.cn/p/aachabcces/d/aachabccintt/git/raw/master/st/files.7z?token=oy7Z7MpiNjH7fiGCm4AUroBSobBmaiFy6NqALUJYSK -O files.7z
         7z x files.7z -oimmortalwrt/files
 
     - name: Set file permissions
