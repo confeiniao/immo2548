@@ -34,22 +34,62 @@ jobs:
         git clone --depth=1 https://github.com/hanwckf/immortalwrt-mt798x.git immortalwrt
         cd immortalwrt
 
+    - name: Download config and files
+      run: |
+        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/mt7981-ax3000.config -O mt7981-ax3000.config
+        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/files.7z -O files.7z
+        7z x files.7z -oimmortalwrt/files
+
+    - name: Set file permissions
+      run: |
+        cd immortalwrt/files
+        chmod 0755 etc
+        chmod 0777 etc/config
+        chmod 0600 etc/config/dhcp
+        chmod 0600 etc/config/network
+        chmod 0600 etc/config/uhttpd
+        chmod 0644 etc/config/wireless
+        chmod 0755 etc/crontabs
+        chmod 0644 etc/crontabs/root
+        chmod 0777 etc/init.d
+        chmod 0755 etc/init.d/heyi
+        chmod 0755 etc/init.d/wipv6
+        chmod 0755 etc/rc.d
+        chmod 0777 etc/rc.d/S99heyi
+        chmod 0777 etc/rc.d/S99wipv6
+        chmod 0755 etc/zs
+        chmod 0644 etc/zs/cert_id.txt
+        chmod 0644 etc/zs/uhttpd.crt
+        chmod 0644 etc/zs/uhttpd.key
+        chmod 0600 etc/AdGuardHome
+        chmod 0600 etc/AdGuardHome.yaml.back
+        chmod 0644 etc/hosts_v6
+        chmod 0600 etc/shadow
+        chmod 0755 usr
+        chmod 0755 usr/cf.sh
+        chmod 0755 usr/heyi.sh
+        chmod 0755 usr/txy.sh
+        chmod 0755 usr/up.sh
+
     - name: Update and install feeds
       run: |
+        cd immortalwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
     - name: Configure for CT3003
       run: |
-        cp -f defconfig/mt7981-ax3000.config .config
+        cd immortalwrt
+        cp -f mt7981-ax3000.config .config
         make defconfig
 
     - name: Build ImmortalWrt
       run: |
+        cd immortalwrt
         make -j$(nproc)
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: immortalwrt
-        path: bin/targets/mediatek/mt7981/
+        path: immortalwrt/bin/targets/mediatek/mt7981/
