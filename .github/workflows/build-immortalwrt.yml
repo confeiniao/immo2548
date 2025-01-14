@@ -19,8 +19,8 @@ jobs:
 
     - name: Download config and files
       run: |
-        wget https://raw.codehub.cn/p/aachabcces/d/aachabccintt/git/raw/master/st/mt7981-ax3000.config?token=CzpOcHgGr8YNPoeRuLegETZTfsyy0QPRf2kswk7sFQ -O mt7981-ax3000.config
-        wget https://raw.codehub.cn/p/aachabcces/d/aachabccintt/git/raw/master/st/files.zip?token=jebTXvnPwTITe0kumoTplysXkibMlnMr5ua4ymCUlu -O files.zip
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/mt7981-ax3000.config -O mt7981-ax3000.config
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/files.zip -O files.zip
 
     - name: Set up environment
       run: |
