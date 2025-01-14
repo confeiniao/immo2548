@@ -17,11 +17,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Download config and files
-      run: |
-        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/mt7981-ax3000.config -O mt7981-ax3000.config
-        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/files.zip -O files.zip
-
     - name: Set up environment
       run: |
         sudo apt update -y
@@ -37,51 +32,67 @@ jobs:
     - name: Clone ImmortalWrt source
       run: |
         git clone --depth=1 https://github.com/hanwckf/immortalwrt-mt798x.git immortalwrt
-
-    - name: Extract files.zip
-      run: |
-        unzip ../files.zip -d files
-
-    - name: Set file permissions
-      run: |
-        cd files
-        chmod 0755 etc
-        chmod 0777 etc/config
-        chmod 0600 etc/config/dhcp
-        chmod 0600 etc/config/network
-        chmod 0600 etc/config/uhttpd
-        chmod 0644 etc/config/wireless
-        chmod 0755 etc/crontabs
-        chmod 0644 etc/crontabs/root
-        chmod 0777 etc/init.d
-        chmod 0755 etc/init.d/heyi
-        chmod 0755 etc/init.d/wipv6
-        chmod 0755 etc/rc.d
-        chmod 0777 etc/rc.d/S99heyi
-        chmod 0777 etc/rc.d/S99wipv6
-        chmod 0755 etc/zs
-        chmod 0644 etc/zs/cert_id.txt
-        chmod 0644 etc/zs/uhttpd.crt
-        chmod 0644 etc/zs/uhttpd.key
-        chmod 0600 etc/AdGuardHome
-        chmod 0600 etc/AdGuardHome.yaml.back
-        chmod 0644 etc/hosts_v6
-        chmod 0600 etc/shadow
-        chmod 0755 usr
-        chmod 0755 usr/cf.sh
-        chmod 0755 usr/heyi.sh
-        chmod 0755 usr/txy.sh
-        chmod 0755 usr/up.sh
+        cd immortalwrt
 
     - name: Update and install feeds
       run: |
-        cd immortalwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
     - name: Configure for CT3003
       run: |
-        cp -f ../mt7981-ax3000.config .config
+        # 下载配置文件
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/mt7981-ax3000.config
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/files.zip -O files.zip
+
+        # 下载 luci-app-adguardhome.ipk
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/luci-app-adguardhome_1.8-9_all.ipk -O luci-app-adguardhome_1.8-9_all.ipk
+
+        # 解压 files.zip
+        unzip files.zip -d files
+
+        # 解压 luci-app-adguardhome.ipk 到 files 目录
+        ar x luci-app-adguardhome_1.8-9_all.ipk
+        tar -xzf data.tar.gz -C files
+
+        # 设置文件权限
+        chmod -R 0755 files/etc
+        chmod 0777 files/etc/config
+        chmod 0600 files/etc/config/dhcp
+        chmod 0600 files/etc/config/network
+        chmod 0600 files/etc/config/uhttpd
+        chmod 0644 files/etc/config/wireless
+        chmod 0755 files/etc/crontabs
+        chmod 0644 files/etc/crontabs/root
+        chmod 0777 files/etc/init.d
+        chmod 0755 files/etc/init.d/heyi
+        chmod 0755 files/etc/init.d/wipv6
+        chmod 0755 files/etc/rc.d
+        chmod 0777 files/etc/rc.d/S99heyi
+        chmod 0777 files/etc/rc.d/S99wipv6
+        chmod 0755 files/etc/zs
+        chmod 0644 files/etc/zs/cert_id.txt
+        chmod 0644 files/etc/zs/uhttpd.crt
+        chmod 0644 files/etc/zs/uhttpd.key
+        chmod 0600 files/etc/AdGuardHome
+        chmod 0600 files/etc/AdGuardHome.yaml.back
+        chmod 0644 files/etc/hosts_v6
+        chmod 0600 files/etc/shadow
+        chmod 0755 files/usr
+        chmod 0755 files/usr/cf.sh
+        chmod 0755 files/usr/heyi.sh
+        chmod 0755 files/usr/txy.sh
+        chmod 0755 files/usr/up.sh
+
+        # 删除临时文件
+        rm files.zip
+        rm luci-app-adguardhome_1.8-9_all.ipk
+        rm control.tar.gz
+        rm data.tar.gz
+        rm debian-binary
+
+        # 复制配置文件
+        cp -f mt7981-ax3000.config .config
         make defconfig
 
     - name: Build ImmortalWrt
