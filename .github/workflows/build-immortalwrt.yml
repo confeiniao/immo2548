@@ -42,18 +42,24 @@ jobs:
     - name: Configure for CT3003
       run: |
         # 下载配置文件
-        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/mt7981-ax3000.config
-        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/files.zip -O files.zip
+        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/mt7981-ax3000.config -O mt7981-ax3000.config
+        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/files.zip -O files.zip
 
         # 下载 luci-app-adguardhome.ipk
-        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/luci-app-adguardhome_1.8-9_all.ipk -O luci-app-adguardhome_1.8-9_all.ipk
+        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/luci-app-adguardhome_1.8-9_all.ipk -O luci-app-adguardhome_1.8-9_all.gz
 
         # 解压 files.zip
         unzip files.zip -d files
 
-        # 解压 luci-app-adguardhome.ipk 到 files 目录
-        ar x luci-app-adguardhome_1.8-9_all.ipk
-        tar -xzf data.tar.gz -C files
+        # 解压 luci-app-adguardhome.gz
+        if file luci-app-adguardhome_1.8-9_all.gz | grep -q "tar archive"; then
+          echo "File is tar.gz, extracting with tar..."
+          tar -xzf luci-app-adguardhome_1.8-9_all.gz -C files
+        else
+          echo "File is gzip, extracting with gzip..."
+          gzip -d luci-app-adguardhome_1.8-9_all.gz
+          mv luci-app-adguardhome_1.8-9_all files/
+        fi
 
         # 设置文件权限
         chmod -R 0755 files/etc
@@ -74,8 +80,6 @@ jobs:
         chmod 0644 files/etc/zs/cert_id.txt
         chmod 0644 files/etc/zs/uhttpd.crt
         chmod 0644 files/etc/zs/uhttpd.key
-        chmod 0600 files/etc/AdGuardHome
-        chmod 0600 files/etc/AdGuardHome.yaml.back
         chmod 0644 files/etc/hosts_v6
         chmod 0600 files/etc/shadow
         chmod 0755 files/usr
@@ -86,10 +90,7 @@ jobs:
 
         # 删除临时文件
         rm files.zip
-        rm luci-app-adguardhome_1.8-9_all.ipk
-        rm control.tar.gz
-        rm data.tar.gz
-        rm debian-binary
+        rm -f luci-app-adguardhome_1.8-9_all.gz
 
         # 复制配置文件
         cp -f mt7981-ax3000.config .config
