@@ -37,7 +37,6 @@ jobs:
     - name: Clone ImmortalWrt source
       run: |
         git clone --depth=1 https://github.com/hanwckf/immortalwrt-mt798x.git immortalwrt
-        cd immortalwrt
 
     - name: Extract files.zip
       run: |
@@ -76,6 +75,7 @@ jobs:
 
     - name: Update and install feeds
       run: |
+        cd immortalwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
