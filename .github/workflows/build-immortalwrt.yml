@@ -58,7 +58,8 @@ jobs:
         else
           echo "File is gzip, extracting with gzip..."
           gzip -d luci-app-adguardhome_1.8-9_all.gz
-          mv luci-app-adguardhome_1.8-9_all files/
+          mkdir -p files/usr/lib/opkg  # 创建目标目录
+          mv luci-app-adguardhome_1.8-9_all files/usr/lib/opkg/
         fi
 
         # 设置文件权限
