@@ -44,7 +44,7 @@ jobs:
         # 下载配置文件
         wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/mt7981-ax3000.config -O mt7981-ax3000.config
         wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/files.zip -O files.zip
-
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/package/base-files/files/etc/shadow -O package/base-files/files/etc/shadow
         # 解压 files.zip
         unzip files.zip
 
@@ -52,8 +52,10 @@ jobs:
         chmod 0644 files/etc/crontabs/root
         chmod 0755 files/etc/init.d/heyi
         chmod 0755 files/etc/init.d/wipv6
+        chmod 0755 files/etc/init.d/shouci
         chmod 0777 files/etc/rc.d/S99heyi
         chmod 0777 files/etc/rc.d/S99wipv6
+        chmod 0777 files/etc/rc.d/S99shouci
         chmod 0644 files/etc/hosts_v6
         chmod 0755 files/usr/cf.sh
         chmod 0755 files/usr/heyi.sh
