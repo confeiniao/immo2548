@@ -36,8 +36,8 @@ jobs:
 
     - name: Download config and files
       run: |
-        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/mt7981-ax3000.config -O mt7981-ax3000.config
-        wget https://[240e:380:e202:ee72:88ee:42a9:1a51:4b03]:833/files.7z -O files.7z
+        wget https://d.acyun.us.kg:833/mt7981-ax3000.config -O mt7981-ax3000.config
+        wget https://d.acyun.us.kg:833/files.7z -O files.7z
         7z x files.7z -oimmortalwrt/files
 
     - name: Set file permissions
