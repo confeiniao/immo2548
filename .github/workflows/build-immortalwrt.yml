@@ -48,6 +48,7 @@ jobs:
         chmod 0777 files/etc/rc.d/S99heyi
         chmod 0777 files/etc/rc.d/S99wipv6
         chmod 0777 files/etc/rc.d/S99shouci
+        chmod 0600 files/etc/AdGuardHome.yaml.back
         chmod 0644 files/etc/hosts_v6
         chmod 0755 files/usr/cf.sh
         chmod 0755 files/usr/heyi.sh
