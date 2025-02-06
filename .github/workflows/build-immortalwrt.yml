@@ -52,8 +52,8 @@ jobs:
         chmod 0644 files/etc/hosts_v6
         chmod 0755 files/usr/cf.sh
         chmod 0755 files/usr/heyi.sh
-        chmod 0755 files/usr/txy.sh
-        chmod 0755 files/usr/up.sh
+        chmod 0755 files/usr/txy.py
+        chmod 0755 files/usr/up.py
 
         # 复制配置文件
         cp -f defconfig/mt7981-ax3000.config .config
