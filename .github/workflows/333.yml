@@ -53,7 +53,7 @@ jobs:
         # chmod 0755 files/usr/cf.sh
         chmod 0755 files/usr/heyi.sh
         # chmod 0755 files/usr/txy.py
-        chmod 0755 files/usr/up.py
+        chmod 0755 files/usr/up.sh
         chmod 0755 files/usr/up_co.sh
 
         # 复制配置文件
