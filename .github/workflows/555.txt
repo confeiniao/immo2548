@@ -1,1 +1,71 @@
+name: Build ImmortalWrt
 
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up environment
+      run: |
+        sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.eu.org/init_build_environment.sh)'
+
+    - name: Clone ImmortalWrt source
+      run: |
+        git clone --depth=1 https://github.com/hanwckf/immortalwrt-mt798x.git
+        cd immortalwrt-mt798x
+
+    - name: Update and install feeds
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: Configure for CT3003
+      run: |
+        # 下载配置文件
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/mt7981-ax3000.config -O defconfig/mt7981-ax3000.config
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/files.zip -O files.zip
+        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/package/base-files/files/etc/shadow -O package/base-files/files/etc/shadow
+        # 解压 files.zip
+        unzip files.zip
+
+        # 设置文件权限
+        chmod 0644 files/etc/crontabs/root
+        chmod 0755 files/etc/init.d/heyi
+        chmod 0755 files/etc/init.d/wipv6
+        chmod 0755 files/etc/init.d/shouci
+        chmod 0777 files/etc/rc.d/S99heyi
+        chmod 0777 files/etc/rc.d/S99wipv6
+        chmod 0777 files/etc/rc.d/S99shouci
+        chmod 0600 files/etc/AdGuardHome.yaml.back
+        chmod 0644 files/etc/hosts_v6
+        chmod 0755 files/usr/cf.sh
+        chmod 0755 files/usr/heyi.sh
+        chmod 0755 files/usr/txy.py
+        chmod 0755 files/usr/up.py
+        chmod 0755 files/usr/up_co.sh
+
+        # 复制配置文件
+        cp -f defconfig/mt7981-ax3000.config .config
+        make defconfig
+
+    - name: Build ImmortalWrt
+      run: |
+        make -j$(nproc)
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: immortalwrt-mt798x
+        path: bin/targets/mediatek/mt7981/
