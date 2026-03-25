@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout repository
@@ -35,26 +35,7 @@ jobs:
       run: |
         # 下载配置文件
         wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/mt7981-ax3000.config -O defconfig/mt7981-ax3000.config
-        wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/files.zip -O files.zip
         wget https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/package/base-files/files/etc/shadow -O package/base-files/files/etc/shadow
-        # 解压 files.zip
-        unzip files.zip
-
-        # 设置文件权限
-        chmod 0644 files/etc/crontabs/root
-        chmod 0755 files/etc/init.d/heyi
-        chmod 0755 files/etc/init.d/wipv6
-        chmod 0755 files/etc/init.d/shouci
-        chmod 0777 files/etc/rc.d/S99heyi
-        chmod 0777 files/etc/rc.d/S99wipv6
-        chmod 0777 files/etc/rc.d/S99shouci
-        chmod 0600 files/etc/AdGuardHome.yaml.back
-        chmod 0644 files/etc/hosts_v6
-        chmod 0755 files/usr/cf.sh
-        chmod 0755 files/usr/heyi.sh
-        chmod 0755 files/usr/txy.py
-        chmod 0755 files/usr/up.py
-        chmod 0755 files/usr/up_co.sh
 
         # 复制配置文件
         cp -f defconfig/mt7981-ax3000.config .config
