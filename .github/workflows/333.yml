@@ -49,6 +49,7 @@ jobs:
         chmod 0600 files/etc/AdGuardHome.yaml.back
 
         chmod 0755 files/usr/wifi.sh
+        chmod 0755 files/usr/wifi2.sh
         chmod 0755 files/usr/heyi.sh
         chmod 0755 files/usr/up.sh
         chmod 0755 files/usr/up_co.sh
