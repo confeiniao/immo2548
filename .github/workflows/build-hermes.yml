@@ -75,6 +75,7 @@ jobs:
 
       - name: Download dependencies
         run: |
+          go install mvdan.cc/garble@latest
           go mod tidy
           go mod download
 
@@ -90,10 +91,7 @@ jobs:
           if [ "$GOOS" = "windows" ]; then
             EXT=".exe"
           fi
-          go build \
-            -trimpath \
-            -ldflags="-s -w -buildid=" \
-            -o "dist/hermes-agent-${GOOS}-${GOARCH}${EXT}" \
+          garble -literals build -trimpath -ldflags="-s -w -buildid=" -o hermes-agent main.go
             .
 
       - name: Upload build artifact
