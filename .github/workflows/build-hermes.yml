@@ -100,9 +100,26 @@ jobs:
       - name: Check embedded web assets
         run: |
           set -eu
+
+          echo "当前工作目录："
+          pwd
+
+          echo "仓库文件结构："
+          find . -maxdepth 3 -type f | sort
+
+          echo "检查前端文件："
+          for file in web/index.html web/app.js web/styles.css; do
+            if [ -s "$file" ]; then
+              echo "OK: $file"
+            else
+              echo "MISSING OR EMPTY: $file"
+            fi
+          done
+
           test -s web/index.html
           test -s web/app.js
           test -s web/styles.css
+
           echo "All frontend assets exist."
 
       - name: Resolve Go dependencies
