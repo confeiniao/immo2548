@@ -1,13 +1,14 @@
-
+```yaml
 name: Build Hermes Agent
 
 on:
   workflow_dispatch:
     inputs:
       main_go_raw_url:
-        description: "https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/main.go"
+        description: "main.go 的 Raw 文件下载地址"
         required: true
         type: string
+
       target_os:
         description: "目标操作系统"
         required: true
@@ -17,6 +18,7 @@ on:
           - windows
           - darwin
         default: linux
+
       target_arch:
         description: "目标架构"
         required: true
@@ -31,7 +33,9 @@ permissions:
 
 jobs:
   build:
+    name: Build ${{ inputs.target_os }}-${{ inputs.target_arch }}
     runs-on: ubuntu-22.04
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -43,17 +47,46 @@ jobs:
           go-version: "1.21.4"
           cache: false
 
-      - name: Download main.go
+      - name: Validate and download main.go
         env:
           MAIN_GO_RAW_URL: ${{ inputs.main_go_raw_url }}
         run: |
           set -eu
-          curl --fail --location --silent --show-error \
-            "$MAIN_GO_RAW_URL" -o main.go
+
+          case "$MAIN_GO_RAW_URL" in
+            https://raw.githubusercontent.com/*)
+              ;;
+            *)
+              echo "ERROR: 只允许使用 raw.githubusercontent.com 的 HTTPS 地址"
+              exit 1
+              ;;
+          esac
+
+          curl \
+            --fail \
+            --location \
+            --silent \
+            --show-error \
+            --retry 3 \
+            --retry-delay 2 \
+            --connect-timeout 15 \
+            --max-time 120 \
+            "$MAIN_GO_RAW_URL" \
+            -o main.go
+
           test -s main.go
+
+          if ! grep -Eq '^[[:space:]]*package[[:space:]]+[[:alnum:]_]+' main.go; then
+            echo "ERROR: 下载内容不是有效的 Go 源码文件"
+            exit 1
+          fi
+
+          echo "main.go 下载成功"
 
       - name: Prepare Go module
         run: |
+          set -eu
+
           cat > go.mod <<'EOF'
           module hermes-agent
 
@@ -67,16 +100,39 @@ jobs:
 
       - name: Check embedded web assets
         run: |
+          set -eu
+
           if [ ! -d web ]; then
-            echo "ERROR: main.go 使用 //go:embed web，但仓库中没有 web/ 目录。"
+            echo "ERROR: 缺少 web/ 目录"
+            echo "请确认仓库中包含 main.go 所需的静态资源"
             exit 1
           fi
-          find web -type f -print -quit | grep -q .
 
-      - name: Download dependencies
+          if ! find web -type f -print -quit | grep -q .; then
+            echo "ERROR: web/ 目录为空"
+            exit 1
+          fi
+
+          echo "web/ 静态资源检查通过"
+
+      - name: Resolve Go dependencies
         run: |
-          go install mvdan.cc/garble@latest
+          set -eu
+          go mod tidy
           go mod download
+          go mod verify
+
+      - name: Install Garble
+        env:
+          GOBIN: ${{ runner.temp }}/bin
+        run: |
+          set -eu
+
+          mkdir -p "$GOBIN"
+          go install mvdan.cc/garble@v0.11.0
+
+          echo "$GOBIN" >> "$GITHUB_PATH"
+          "$GOBIN/garble" -h >/dev/null
 
       - name: Build
         env:
@@ -85,22 +141,36 @@ jobs:
           CGO_ENABLED: "0"
         run: |
           set -eu
+
           mkdir -p dist
+
           EXT=""
           if [ "$GOOS" = "windows" ]; then
             EXT=".exe"
           fi
 
+          OUTPUT="dist/hermes-agent-${GOOS}-${GOARCH}${EXT}"
+
+          echo "Target OS: $GOOS"
+          echo "Target ARCH: $GOARCH"
+          echo "CGO_ENABLED: $CGO_ENABLED"
+
           garble build \
             -trimpath \
             -ldflags="-s -w -buildid=" \
-            -o "dist/hermes-agent-${GOOS}-${GOARCH}${EXT}" \
+            -o "$OUTPUT" \
             .
+
+          test -s "$OUTPUT"
+
+          echo "Build successful: $OUTPUT"
+          ls -lh "$OUTPUT"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: hermes-agent-${{ inputs.target_os }}-${{ inputs.target_arch }}
-          path: dist/*
+          path: dist/hermes-agent-*
           if-no-files-found: error
           retention-days: 7
+```
