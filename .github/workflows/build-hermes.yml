@@ -39,6 +39,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: openwrt-21.02
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -46,28 +48,22 @@ jobs:
           go-version: "1.21.4"
           cache: false
 
-      - name: Validate and download main.go
+      - name: Download main.go
         env:
           MAIN_GO_RAW_URL: ${{ inputs.main_go_raw_url }}
         run: |
           set -eu
 
           case "$MAIN_GO_RAW_URL" in
-            https://raw.githubusercontent.com/*)
-              ;;
+            https://raw.githubusercontent.com/*) ;;
             *)
-              echo "ERROR: 只允许使用 raw.githubusercontent.com 的 HTTPS 地址"
+              echo "ERROR: main.go 必须使用 raw.githubusercontent.com 的 HTTPS 地址"
               exit 1
               ;;
           esac
 
-          curl \
-            --fail \
-            --location \
-            --silent \
-            --show-error \
+          curl --fail --location --silent --show-error \
             --retry 3 \
-            --retry-delay 2 \
             --connect-timeout 15 \
             --max-time 120 \
             "$MAIN_GO_RAW_URL" \
@@ -75,12 +71,44 @@ jobs:
 
           test -s main.go
 
-          if ! grep -Eq '^[[:space:]]*package[[:space:]]+[[:alnum:]_]+' main.go; then
-            echo "ERROR: 下载内容不是有效的 Go 源码文件"
+          if ! grep -Eq '^[[:space:]]*package[[:space:]]+main([[:space:]]|$)' main.go; then
+            echo "ERROR: 下载内容不是有效的 main 包源码"
             exit 1
           fi
 
           echo "main.go 下载成功"
+
+      - name: Download frontend assets
+        run: |
+          set -eu
+
+          mkdir -p web
+
+          # 将带有不可见 Unicode 字符的文件名
+          # 统一保存为标准的 index.html
+          curl --fail --location --silent --show-error \
+            --retry 3 \
+            --connect-timeout 15 \
+            --max-time 120 \
+            'https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/web/%E2%80%8Eindex.html' \
+            -o web/index.html
+
+          curl --fail --location --silent --show-error \
+            --retry 3 \
+            --connect-timeout 15 \
+            --max-time 120 \
+            'https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/web/app.js' \
+            -o web/app.js
+
+          curl --fail --location --silent --show-error \
+            --retry 3 \
+            --connect-timeout 15 \
+            --max-time 120 \
+            'https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/web/styles.css' \
+            -o web/styles.css
+
+          echo "前端文件下载完成："
+          ls -lah web/
 
       - name: Prepare Go module
         run: |
@@ -101,26 +129,14 @@ jobs:
         run: |
           set -eu
 
-          echo "当前工作目录："
-          pwd
-
-          echo "仓库文件结构："
-          find . -maxdepth 3 -type f | sort
-
-          echo "检查前端文件："
           for file in web/index.html web/app.js web/styles.css; do
-            if [ -s "$file" ]; then
-              echo "OK: $file"
-            else
-              echo "MISSING OR EMPTY: $file"
+            if [ ! -s "$file" ]; then
+              echo "ERROR: 文件不存在或为空: $file"
+              exit 1
             fi
           done
 
-          test -s web/index.html
-          test -s web/app.js
-          test -s web/styles.css
-
-          echo "All frontend assets exist."
+          echo "前端资源检查通过"
 
       - name: Resolve Go dependencies
         run: |
@@ -136,13 +152,10 @@ jobs:
           set -eu
 
           mkdir -p "$GOBIN"
-
           go install mvdan.cc/garble@v0.11.0
 
           echo "$GOBIN" >> "$GITHUB_PATH"
-
           "$GOBIN/garble" version
-          go version
 
       - name: Build
         env:
@@ -161,10 +174,6 @@ jobs:
 
           OUTPUT="dist/hermes-agent-${GOOS}-${GOARCH}${EXT}"
 
-          echo "Target OS: $GOOS"
-          echo "Target ARCH: $GOARCH"
-          echo "CGO_ENABLED: $CGO_ENABLED"
-
           garble build \
             -trimpath \
             -ldflags="-s -w -buildid=" \
@@ -172,8 +181,6 @@ jobs:
             .
 
           test -s "$OUTPUT"
-
-          echo "Build successful: $OUTPUT"
           ls -lh "$OUTPUT"
 
       - name: Upload build artifact
