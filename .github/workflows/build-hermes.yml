@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       main_go_raw_url:
-        description: "main.go 的 GitHub RAW URL"
+        description: "https://raw.githubusercontent.com/confeiniao/immo2548/refs/heads/openwrt-21.02/LICENSES/main.go"
         required: true
         type: string
       target_os:
