@@ -1,4 +1,3 @@
-```yaml
 name: Build Hermes Agent
 
 on:
@@ -173,4 +172,3 @@ jobs:
           path: dist/hermes-agent-*
           if-no-files-found: error
           retention-days: 7
-```
