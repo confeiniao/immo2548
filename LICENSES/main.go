@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bytes"
-	"embed"
-	"encoding/json"
-	"fmt"
-	"io"
-	"io/fs"
-	"log"
+    "embed"
+    "encoding/json"
+    "fmt"
+    "io/fs"
+    "log"
 	"math/rand"
 	"net"
 	"net/http"
