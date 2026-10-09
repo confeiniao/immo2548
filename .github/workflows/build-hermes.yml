@@ -128,10 +128,13 @@ jobs:
           set -eu
 
           mkdir -p "$GOBIN"
+
           go install mvdan.cc/garble@v0.11.0
 
           echo "$GOBIN" >> "$GITHUB_PATH"
-          "$GOBIN/garble" -h >/dev/null
+
+          "$GOBIN/garble" version
+          go version
 
       - name: Build
         env:
