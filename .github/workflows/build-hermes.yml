@@ -1,0 +1,105 @@
+
+name: Build Hermes Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      main_go_raw_url:
+        description: "main.go 的 GitHub RAW URL"
+        required: true
+        type: string
+      target_os:
+        description: "目标操作系统"
+        required: true
+        type: choice
+        options:
+          - linux
+          - windows
+          - darwin
+        default: linux
+      target_arch:
+        description: "目标架构"
+        required: true
+        type: choice
+        options:
+          - amd64
+          - arm64
+        default: amd64
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21.4"
+          cache: false
+
+      - name: Download main.go
+        env:
+          MAIN_GO_RAW_URL: ${{ inputs.main_go_raw_url }}
+        run: |
+          set -eu
+          curl --fail --location --silent --show-error \
+            "$MAIN_GO_RAW_URL" -o main.go
+          test -s main.go
+
+      - name: Prepare Go module
+        run: |
+          cat > go.mod <<'EOF'
+          module hermes-agent
+
+          go 1.21.4
+
+          require (
+              github.com/gorilla/websocket v1.5.1
+              github.com/xtls/xray-core v1.8.24
+          )
+          EOF
+
+      - name: Check embedded web assets
+        run: |
+          if [ ! -d web ]; then
+            echo "ERROR: main.go 使用 //go:embed web，但仓库中没有 web/ 目录。"
+            exit 1
+          fi
+          find web -type f -print -quit | grep -q .
+
+      - name: Download dependencies
+        run: |
+          go mod tidy
+          go mod download
+
+      - name: Build
+        env:
+          GOOS: ${{ inputs.target_os }}
+          GOARCH: ${{ inputs.target_arch }}
+          CGO_ENABLED: "0"
+        run: |
+          set -eu
+          mkdir -p dist
+          EXT=""
+          if [ "$GOOS" = "windows" ]; then
+            EXT=".exe"
+          fi
+          go build \
+            -trimpath \
+            -ldflags="-s -w -buildid=" \
+            -o "dist/hermes-agent-${GOOS}-${GOARCH}${EXT}" \
+            .
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-agent-${{ inputs.target_os }}-${{ inputs.target_arch }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
