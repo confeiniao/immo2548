@@ -100,19 +100,10 @@ jobs:
       - name: Check embedded web assets
         run: |
           set -eu
-
-          if [ ! -d web ]; then
-            echo "ERROR: 缺少 web/ 目录"
-            echo "请确认仓库中包含 main.go 所需的静态资源"
-            exit 1
-          fi
-
-          if ! find web -type f -print -quit | grep -q .; then
-            echo "ERROR: web/ 目录为空"
-            exit 1
-          fi
-
-          echo "web/ 静态资源检查通过"
+          test -s web/index.html
+          test -s web/app.js
+          test -s web/styles.css
+          echo "All frontend assets exist."
 
       - name: Resolve Go dependencies
         run: |
