@@ -14,32 +14,38 @@ jobs:
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
           net user runneradmin MyPassword123!
 
-      - name: 建立 Pinggy TCP 穿透
+      - name: 建立 Pinggy TCP 穿透并提取地址
         run: |
-          Write-Host "正在后台建立穿透隧道..."
-          # 后台运行 ssh，并将标准输出与错误输出直接写入本地文件
-          $proc = Start-Process -FilePath "ssh" -ArgumentList "-p 443 -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R0:127.0.0.1:3389 tcp@free.pinggy.io" -RedirectStandardOutput "pinggy.log" -RedirectStandardError "pinggy_err.log" -PassThru
+          Write-Host "正在建立穿透隧道..."
+          # 增加 -L4300 映射 Pinggy 的本地 Web API 端口
+          $proc = Start-Process -FilePath "ssh" -ArgumentList "-p 443 -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R0:127.0.0.1:3389 -L4300:127.0.0.1:4300 tcp@free.pinggy.io" -PassThru
 
-          # 循环等待输出地址（最多等待 15 秒）
-          $found = $false
+          # 通过本地 API 轮询获取分配的连接地址（最多等 15 秒）
+          $addr = $null
           for ($i = 0; $i -lt 15; $i++) {
               Start-Sleep -Seconds 1
-              if (Test-Path pinggy.log) {
-                  $log = Get-Content pinggy.log -Raw
-                  if ($log -match "tcp://") {
-                      $found = $true
+              try {
+                  $res = Invoke-RestMethod -Uri "http://127.0.0.1:4300/urls" -ErrorAction Stop
+                  if ($res.urls -and $res.urls.Count -gt 0) {
+                      # 自动过滤掉前缀 tcp://
+                      $addr = $res.urls[0] -replace '^tcp://', ''
                       break
                   }
+              } catch {
+                  # 隧道建立中，继续等待
               }
           }
 
-          Write-Host "=================== 远程桌面连接信息 ==================="
-          if (Test-Path pinggy.log) { Get-Content pinggy.log }
-          if (Test-Path pinggy_err.log) { Get-Content pinggy_err.log }
-          Write-Host "------------------------------------------------------"
-          Write-Host "用户名: runneradmin"
-          Write-Host "密码: MyPassword123!"
-          Write-Host "======================================================"
+          if ($addr) {
+              Write-Host "=================== 远程桌面连接信息 ==================="
+              Write-Host "RDP 连接地址 : $addr"
+              Write-Host "用户名       : runneradmin"
+              Write-Host "密码         : MyPassword123!"
+              Write-Host "======================================================"
+              Write-Host "（已自动去除 tcp://，直接复制上面的地址填入 mstsc 即可）"
+          } else {
+              Write-Host "获取地址超时，请检查网络后重新运行。"
+          }
 
-          # 保持挂起进程，维持连接不断开
+          # 保持连接
           Wait-Process -Id $proc.Id
