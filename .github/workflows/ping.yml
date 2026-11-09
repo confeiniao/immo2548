@@ -21,4 +21,4 @@ jobs:
           Write-Host "正在连接穿透服务器，请查看下方输出的连接地址..."
           Write-Host "=========================================="
           # 针对 Windows 特性，使用 127.0.0.1 映射 3389 端口，免输入任何指纹直接穿透
-          ssh -p 443 -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R0:127.0.0.1:3389 tcp@free.pinggy.io
+          ssh -tt -p 443 -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R0:127.0.0.1:3389 tcp@free.pinggy.io
