@@ -1,0 +1,24 @@
+name: Windows-Pinggy-RDP
+
+on:
+  workflow_dispatch: # 支持手动一键启动
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: 启用 Windows 远程桌面 (RDP)
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+          # 设置管理员账号密码为: MyPassword123!
+          net user runneradmin MyPassword123!
+
+      - name: 建立 Pinggy TCP 穿透
+        run: |
+          Write-Host "=========================================="
+          Write-Host "正在连接穿透服务器，请查看下方输出的连接地址..."
+          Write-Host "=========================================="
+          # 针对 Windows 特性，使用 127.0.0.1 映射 3389 端口，免输入任何指纹直接穿透
+          ssh -p 443 -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o ServerAliveInterval=30 -R0:127.0.0.1:3389 tcp@free.pinggy.io
