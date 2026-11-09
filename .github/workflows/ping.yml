@@ -1,4 +1,4 @@
-name: Windows-Pinggy-RDP
+name: Ping
 
 on:
   workflow_dispatch: # 支持手动一键启动
